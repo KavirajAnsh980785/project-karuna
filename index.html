@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Project Karuna</title>
+
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+<style>
+body{margin:0;font-family:sans-serif;background:#eef2f7;}
+header{background:#0d47a1;color:white;padding:20px;text-align:center;}
+.container{max-width:1100px;margin:auto;padding:20px;}
+.card{background:white;padding:20px;margin:20px 0;border-radius:15px;box-shadow:0 6px 15px rgba(0,0,0,0.15);} 
+input,textarea{width:100%;padding:10px;margin:10px 0;border-radius:8px;border:1px solid #ccc;}
+button{background:#ff6f00;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;}
+ul{list-style:none;padding:0;}
+li{background:#f9f9f9;margin:10px 0;padding:15px;border-radius:10px;}
+</style>
+
+</head>
+
+<body>
+
+<header data-aos="fade-down">
+<h1>Project Karuna</h1>
+<p>Circle of Compassion & Service</p>
+</header>
+
+<div class="container">
+
+<!-- FORM -->
+<div class="card" data-aos="fade-up">
+<h2>Send Request / Donate</h2>
+<form onsubmit="sendData(event)">
+<input id="name" placeholder="Name" required>
+<input id="email" placeholder="Email" required>
+<textarea id="msg" placeholder="Your Message"></textarea>
+<button>Submit</button>
+</form>
+</div>
+
+<!-- PASSWORD -->
+<div class="card" data-aos="zoom-in">
+<h2>🔒 Enter Password</h2>
+<input id="pass" placeholder="Enter Password">
+<button onclick="checkPass()">Unlock</button>
+</div>
+
+<!-- SECURE DATA -->
+<div id="secured" style="display:none">
+
+<div class="card">
+<h2>Pending Requests</h2>
+<ul id="pending"></ul>
+</div>
+
+<div class="card">
+<h2>Accepted Requests</h2>
+<ul id="accepted"></ul>
+</div>
+
+</div>
+
+</div>
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+<script>
+AOS.init();
+
+// PASSWORD CHECK
+function checkPass(){
+let p = document.getElementById('pass').value;
+
+if(p === "sameerawasthi"){
+    document.getElementById('secured').style.display = "block";
+    loadData();
+}else{
+    alert("Wrong Password");
+}
+}
+
+// SEND DATA
+async function sendData(e){
+e.preventDefault();
+
+let obj={
+name:document.getElementById('name').value,
+email:document.getElementById('email').value,
+message:document.getElementById('msg').value
+};
+
+await fetch('http://localhost:5000/add',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify(obj)
+});
+
+alert("Request Sent");
+}
+
+// ACCEPT REQUEST
+async function accept(id){
+let donor = prompt("Enter Donor Name");
+if(!donor) return;
+
+await fetch('http://localhost:5000/accept/'+id,{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({donor})
+});
+
+loadData();
+}
+
+// LOAD DATA
+async function loadData(){
+let res = await fetch('http://localhost:5000/all');
+let data = await res.json();
+
+let pending="";
+let accepted="";
+
+data.forEach(d=>{
+if(!d.accepted){
+pending += `<li><b>${d.name}</b><br>${d.message}<br><button onclick="accept('${d._id}')">Accept</button></li>`;
+}else{
+accepted += `<li><b>${d.name}</b><br>${d.message}<br>✅ Accepted by: ${d.donor}</li>`;
+}
+});
+
+document.getElementById('pending').innerHTML = pending;
+document.getElementById('accepted').innerHTML = accepted;
+}
+
+</script>
+
+</body>
+</html>
